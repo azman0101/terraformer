@@ -21,6 +21,8 @@ import (
 	"strings"
 )
 
+var normalizeRegex = regexp.MustCompile(`^[^a-zA-Z_]+`)
+
 // Making resource's name less ugly
 func normalizeResourceName(s string) string {
 	specialChars := `<>()*#{}[]|@_ .%'",&`
@@ -28,7 +30,7 @@ func normalizeResourceName(s string) string {
 		s = strings.ReplaceAll(s, string(c), "-")
 	}
 
-	s = regexp.MustCompile(`^[^a-zA-Z_]+`).ReplaceAllLiteralString(s, "")
+	s = normalizeRegex.ReplaceAllLiteralString(s, "")
 	s = strings.TrimSuffix(s, "-")
 
 	return strings.ToLower(s)
@@ -39,7 +41,7 @@ func normalizeResourceNameWithRandom(s string, rand bool) string {
 	for _, c := range specialChars {
 		s = strings.ReplaceAll(s, string(c), "_")
 	}
-	s = regexp.MustCompile(`^[^a-zA-Z_]+`).ReplaceAllLiteralString(s, "")
+	s = normalizeRegex.ReplaceAllLiteralString(s, "")
 	s = strings.TrimSuffix(s, "`_")
 	if rand {
 		randString := RandStringBytes(4)
