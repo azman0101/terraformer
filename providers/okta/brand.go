@@ -76,14 +76,35 @@ func (g *ThemeGenerator) InitResources() error {
 			return fmt.Errorf("error listing themes for brand %s: %w", brand.GetId(), err)
 		}
 		for _, theme := range themes {
+			attributes := map[string]string{
+				"brand_id": brand.GetId(),
+			}
+
+			if theme.HasPrimaryColorHex() {
+				attributes["primary_color_hex"] = theme.GetPrimaryColorHex()
+			}
+			if theme.HasSecondaryColorHex() {
+				attributes["secondary_color_hex"] = theme.GetSecondaryColorHex()
+			}
+			if theme.HasSignInPageTouchPointVariant() {
+				attributes["sign_in_page_touch_point_variant"] = string(theme.GetSignInPageTouchPointVariant())
+			}
+			if theme.HasEndUserDashboardTouchPointVariant() {
+				attributes["end_user_dashboard_touch_point_variant"] = string(theme.GetEndUserDashboardTouchPointVariant())
+			}
+			if theme.HasErrorPageTouchPointVariant() {
+				attributes["error_page_touch_point_variant"] = string(theme.GetErrorPageTouchPointVariant())
+			}
+			if theme.HasEmailTemplateTouchPointVariant() {
+				attributes["email_template_touch_point_variant"] = string(theme.GetEmailTemplateTouchPointVariant())
+			}
+
 			resources = append(resources, terraformutils.NewResource(
 				brand.GetId()+"/"+theme.GetId(),
 				normalizeResourceName(brand.GetId()+"_"+theme.GetId()),
 				"okta_theme",
 				"okta",
-				map[string]string{
-					"brand_id": brand.GetId(),
-				},
+				attributes,
 				[]string{},
 				map[string]interface{}{},
 			))

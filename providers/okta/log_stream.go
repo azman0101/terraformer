@@ -38,22 +38,43 @@ func (g *LogStreamGenerator) InitResources() error {
 	var resources []terraformutils.Resource
 	for _, stream := range logStreams {
 		var id, name string
+		var attributes map[string]interface{} = make(map[string]interface{})
+
 		if stream.LogStreamAws != nil {
 			id = stream.LogStreamAws.GetId()
 			name = stream.LogStreamAws.GetName()
+			// LogStreamSettingsAws is a struct, not a pointer, so we can't check != nil directly if it's not a pointer field.
+			// However, if LogStreamAws is present, Settings should be valid struct (might be empty).
+			// Let's check if it has fields populated.
+
+			settings := map[string]interface{}{
+				"account_id":        stream.LogStreamAws.Settings.GetAccountId(),
+				"region":            stream.LogStreamAws.Settings.GetRegion(),
+				"event_source_name": stream.LogStreamAws.Settings.GetEventSourceName(),
+			}
+			attributes["settings"] = []interface{}{settings}
+
 		} else if stream.LogStreamSplunk != nil {
 			id = stream.LogStreamSplunk.GetId()
 			name = stream.LogStreamSplunk.GetName()
+
+			settings := map[string]interface{}{
+				"host":  stream.LogStreamSplunk.Settings.GetHost(),
+				"token": stream.LogStreamSplunk.Settings.GetToken(),
+			}
+			attributes["settings"] = []interface{}{settings}
 		} else {
 			continue
 		}
 
-		resources = append(resources, terraformutils.NewSimpleResource(
+		resources = append(resources, terraformutils.NewResource(
 			id,
 			normalizeResourceName(id+"_"+name),
 			"okta_log_stream",
 			"okta",
+			map[string]string{},
 			[]string{},
+			attributes,
 		))
 	}
 	g.Resources = resources
