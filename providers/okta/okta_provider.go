@@ -139,7 +139,6 @@ func (p *OktaProvider) GetSupportedService() map[string]terraformutils.ServiceGe
 		"okta_admin_role_custom":         &RoleGenerator{},
 		"okta_profile_mapping":           &ProfileMappingGenerator{},
 		"okta_realm":                     &RealmGenerator{},
-		"okta_email_sender":              &EmailSenderGenerator{},
 	}
 }
 

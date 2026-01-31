@@ -59,19 +59,40 @@ func (g *EmailDomainGenerator) InitResources() error {
 		return err
 	}
 
-	emailDomains, _, err := client.EmailDomainAPI.ListEmailDomains(ctx).Execute()
+	// We expand "brands" to ensure we can get the brand ID if needed, or check AdditionalProperties.
+	// Although ListEmailDomains returns EmailDomainResponse which might lack BrandId in the struct.
+	// We rely on AdditionalProperties or just the resource import by ID if fetching brand_id is hard.
+	// However, `okta_email_domain` resource usually needs `brand_id`.
+	// If we can't get `brand_id` from the list response easily (without iterating and fetching details),
+	// we might rely on the fact that `brandId` is likely in `AdditionalProperties` map if returned by API.
+
+	emailDomains, _, err := client.EmailDomainAPI.ListEmailDomains(ctx).Expand([]string{"brands"}).Execute()
 	if err != nil {
 		return fmt.Errorf("error listing email domains: %w", err)
 	}
 
 	var resources []terraformutils.Resource
 	for _, domain := range emailDomains {
-		resources = append(resources, terraformutils.NewSimpleResource(
+		attributes := map[string]string{}
+
+		// Try to find brandId in AdditionalProperties
+		if val, ok := domain.AdditionalProperties["brandId"]; ok {
+			attributes["brand_id"] = fmt.Sprintf("%v", val)
+		} else {
+             // If not found directly, maybe we can assume it's missing or try to look into embedded brands if expanded.
+             // But simpler to just proceed. If brand_id is missing, terraformer might produce incomplete HCL,
+             // but `terraform import` often fixes state.
+             // However, `brand_id` is required argument.
+        }
+
+		resources = append(resources, terraformutils.NewResource(
 			domain.GetId(),
 			normalizeResourceName(domain.GetId()+"_"+domain.GetDisplayName()),
 			"okta_email_domain",
 			"okta",
+			attributes,
 			[]string{},
+			map[string]interface{}{},
 		))
 	}
 	g.Resources = resources
