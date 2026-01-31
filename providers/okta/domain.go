@@ -72,7 +72,8 @@ func (g *EmailDomainGenerator) InitResources() error {
 		}
 	}
 
-	emailDomains, _, err := client.EmailDomainAPI.ListEmailDomains(ctx).Execute()
+	// Try to get expanded brands as well
+	emailDomains, _, err := client.EmailDomainAPI.ListEmailDomains(ctx).Expand([]string{"brands"}).Execute()
 	if err != nil {
 		return fmt.Errorf("error listing email domains: %w", err)
 	}
@@ -81,7 +82,19 @@ func (g *EmailDomainGenerator) InitResources() error {
 	for _, domain := range emailDomains {
 		attributes := map[string]string{}
 
-		if brandId, ok := domainToBrand[domain.GetId()]; ok {
+		brandId := ""
+		if bid, ok := domainToBrand[domain.GetId()]; ok {
+			brandId = bid
+		}
+
+		// Fallback: check AdditionalProperties for "brandId"
+		if brandId == "" && domain.AdditionalProperties != nil {
+			if val, ok := domain.AdditionalProperties["brandId"]; ok {
+				brandId = fmt.Sprintf("%v", val)
+			}
+		}
+
+		if brandId != "" {
 			attributes["brand_id"] = brandId
 		}
 

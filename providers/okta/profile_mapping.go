@@ -30,13 +30,21 @@ func (g *ProfileMappingGenerator) InitResources() error {
 		return err
 	}
 
-	mappings, _, err := client.ProfileMappingAPI.ListProfileMappings(ctx).Execute()
+	mappingsList, _, err := client.ProfileMappingAPI.ListProfileMappings(ctx).Execute()
 	if err != nil {
 		return fmt.Errorf("error listing profile mappings: %w", err)
 	}
 
 	var resources []terraformutils.Resource
-	for _, mapping := range mappings {
+	for _, mappingSummary := range mappingsList {
+		// Fetch full details for properties
+		mapping, _, err := client.ProfileMappingAPI.GetProfileMapping(ctx, mappingSummary.GetId()).Execute()
+		if err != nil {
+			// If fetching fails, maybe log error but continue?
+			// For now, let's propagate error as it's critical for functionality
+			return fmt.Errorf("error getting profile mapping %s: %w", mappingSummary.GetId(), err)
+		}
+
 		name := mapping.GetId()
 		// Try to construct a better name
 		source := mapping.GetSource()
@@ -47,12 +55,28 @@ func (g *ProfileMappingGenerator) InitResources() error {
 			name = sourceName + "_to_" + targetName
 		}
 
-		resources = append(resources, terraformutils.NewSimpleResource(
+		attributes := map[string]interface{}{}
+		if mapping.Properties != nil {
+			var mappingList []interface{}
+			for key, prop := range *mapping.Properties {
+				m := map[string]interface{}{
+					"id":         key,
+					"expression": prop.GetExpression(),
+					"push_status": prop.GetPushStatus(),
+				}
+				mappingList = append(mappingList, m)
+			}
+			attributes["mappings"] = mappingList
+		}
+
+		resources = append(resources, terraformutils.NewResource(
 			mapping.GetId(),
 			normalizeResourceName(name),
 			"okta_profile_mapping",
 			"okta",
+			map[string]string{},
 			[]string{},
+			attributes,
 		))
 	}
 	g.Resources = resources
