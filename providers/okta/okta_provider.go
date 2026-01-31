@@ -128,6 +128,18 @@ func (p *OktaProvider) GetSupportedService() map[string]terraformutils.ServiceGe
 		"okta_user_schema":               &UserSchemaPropertyGenerator{},
 		"okta_app_user_schema":           &AppUserSchemaPropertyGenerator{},
 		"okta_authenticator":             &AuthenticatorGenerator{},
+		"okta_brand":                     &BrandGenerator{},
+		"okta_theme":                     &ThemeGenerator{},
+		"okta_domain":                    &DomainGenerator{},
+		"okta_email_domain":              &EmailDomainGenerator{},
+		"okta_captcha":                   &CaptchaGenerator{},
+		"okta_threat_insight_settings":   &ThreatInsightGenerator{},
+		"okta_log_stream":                &LogStreamGenerator{},
+		"okta_feature":                   &FeatureGenerator{},
+		"okta_admin_role_custom":         &RoleGenerator{},
+		"okta_profile_mapping":           &ProfileMappingGenerator{},
+		"okta_realm":                     &RealmGenerator{},
+		"okta_email_sender":              &EmailSenderGenerator{},
 	}
 }
 
