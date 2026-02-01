@@ -124,6 +124,17 @@ func initOptionsAndWrapper(provider terraformutils.ProviderGenerator, options Im
 		options.Resources = providerServices(provider)
 	}
 
+	// Deduplicate resources
+	seen := make(map[string]struct{})
+	var uniqueResources []string
+	for _, r := range options.Resources {
+		if _, ok := seen[r]; !ok {
+			seen[r] = struct{}{}
+			uniqueResources = append(uniqueResources, r)
+		}
+	}
+	options.Resources = uniqueResources
+
 	if len(options.Excludes) > 0 {
 		localSlice := []string{}
 		for _, r := range options.Resources {
