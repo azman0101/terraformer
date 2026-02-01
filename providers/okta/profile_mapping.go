@@ -66,7 +66,9 @@ func (g *ProfileMappingGenerator) InitResources() error {
 				}
 				mappingList = append(mappingList, m)
 			}
-			attributes["mappings"] = mappingList
+			if len(mappingList) > 0 {
+				attributes["mappings"] = mappingList
+			}
 		}
 
 		resources = append(resources, terraformutils.NewResource(

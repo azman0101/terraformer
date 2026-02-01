@@ -100,7 +100,7 @@ func (g *ThemeGenerator) InitResources() error {
 			}
 
 			resources = append(resources, terraformutils.NewResource(
-				brand.GetId()+"/"+theme.GetId(),
+				theme.GetId(),
 				normalizeResourceName(brand.GetId()+"_"+theme.GetId()),
 				"okta_theme",
 				"okta",
