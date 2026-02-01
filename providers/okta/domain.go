@@ -87,6 +87,13 @@ func (g *EmailDomainGenerator) InitResources() error {
 			brandId = bid
 		}
 
+		if brandId == "" && domain.HasEmbedded() {
+			embedded := domain.GetEmbedded()
+			if embedded.Brands != nil && len(embedded.Brands) > 0 {
+				brandId = embedded.Brands[0].GetId()
+			}
+		}
+
 		// Fallback: check AdditionalProperties for "brandId"
 		if brandId == "" && domain.AdditionalProperties != nil {
 			if val, ok := domain.AdditionalProperties["brandId"]; ok {
