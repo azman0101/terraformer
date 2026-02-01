@@ -82,39 +82,30 @@ func (g *EmailDomainGenerator) InitResources() error {
 	for _, domain := range emailDomains {
 		attributes := map[string]string{}
 
-		fmt.Printf("DEBUG: Processing domain %s (%s)\n", domain.GetId(), domain.GetDisplayName())
-
 		brandId := ""
 		if bid, ok := domainToBrand[domain.GetId()]; ok {
 			brandId = bid
-			fmt.Printf("DEBUG: Found brandId %s in domainToBrand map\n", brandId)
 		}
 
 		if brandId == "" && domain.HasEmbedded() {
 			embedded := domain.GetEmbedded()
 			if embedded.Brands != nil && len(embedded.Brands) > 0 {
 				brandId = embedded.Brands[0].GetId()
-				fmt.Printf("DEBUG: Found brandId %s in Embedded.Brands\n", brandId)
-			} else {
-				fmt.Println("DEBUG: Embedded.Brands is empty or nil")
 			}
-		} else if brandId == "" {
-			fmt.Println("DEBUG: No Embedded data")
 		}
 
 		// Fallback: check AdditionalProperties for "brandId"
 		if brandId == "" && domain.AdditionalProperties != nil {
 			if val, ok := domain.AdditionalProperties["brandId"]; ok {
 				brandId = fmt.Sprintf("%v", val)
-				fmt.Printf("DEBUG: Found brandId %s in AdditionalProperties\n", brandId)
 			}
 		}
 
-		if brandId != "" {
-			attributes["brand_id"] = brandId
-		} else {
-			fmt.Printf("DEBUG: Failed to find brandId for domain %s\n", domain.GetId())
+		if brandId == "" {
+			continue
 		}
+
+		attributes["brand_id"] = brandId
 
 		resources = append(resources, terraformutils.NewResource(
 			domain.GetId(),
